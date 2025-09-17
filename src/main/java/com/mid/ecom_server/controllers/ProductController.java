@@ -1,7 +1,10 @@
 package com.mid.ecom_server.controllers;
 
 import java.util.List;
+import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,28 +21,40 @@ import com.mid.ecom_server.repos.ProductRepo;
 @RestController
 @RequestMapping("/products")
 public class ProductController {
+	private static final Logger Log = LoggerFactory.getLogger(ProductController.class);
 	@Autowired ProductRepo productRepo;
 	
 	@GetMapping("/all")
 	public List<Product> getAllProducts() {
+		Log.info("fetching products");
 		return productRepo.findAll();
 	}
 	@PostMapping("/add")
 	public Product addProduct(@RequestBody Product newproduct) {
+		Log.info("adding products "+ newproduct);
 		return productRepo.save(newproduct);
 	}
+	
 	@DeleteMapping("/product/delete/{id}")
 	public String deleteProduct(@PathVariable String id) {
-		Product findproduct = productRepo.findById(id).get();
-		if(findproduct != null) {
+		Optional <Product> findproduct = productRepo.findById(id);
+		if(findproduct.isEmpty()) {
 			productRepo.deleteById(id);
-			return "Product Deleted "+ findproduct.getName();
-		}else {
-			return "Failed to delete product";
+			return "Failed to delete the Product ";
 		}
+		productRepo.deleteById(id);
+		Log.info("Product Deleted "+id);
+		return "Product Deleted";
 	}
-//	@PutMapping("/product/edt/{id")
-//	public Product editProduct@Variable String id, @RequestBody Product new product){
-//		Product findProduct 
-//	}
+	@PutMapping ("/product/edit/{id}")
+	public Product editPorduct(@PathVariable String id, @RequestBody Product newproduct) {
+		Product findproduct = productRepo.findById(id).get();
+		findproduct.setName(newproduct.getName());
+		findproduct.setDescription(newproduct.getDescription());
+		findproduct.setCategory(newproduct.getCategory());
+		findproduct.setTags(newproduct.getTags());
+		findproduct.setPrice(newproduct.getPrice());
+		findproduct.setStock(newproduct.getStock());
+		return productRepo.save(findproduct) ;
+	}
 }
